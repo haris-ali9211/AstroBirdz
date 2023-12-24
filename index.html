@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]><html class="ie ie6" lang="en"> <![endif]-->
+<!--[if IE 7]><html class="ie ie7" lang="en"> <![endif]-->
+<!--[if IE 8]><html class="ie ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!-->
+<html lang="en">
+<!--<![endif]-->
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <meta name="description" content="AstroBirdz " />
+  <meta name="author" content="AstroBirdz" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+  <title>NEST AstroBirdz</title>
+  <link rel="icon" href="/img/fav.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@100;200;300;400;500;600;700;800;900&family=Nunito:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet" />
+  <!-- !Google Fonts -->
+
+  <!-- Styles -->
+  <link type="text/css" rel="stylesheet" href="css/plugins.css?ver=9.0" />
+  <link type="text/css" rel="stylesheet" href="css/style.css?ver=9.0" />
+  <!--[if lt IE 9]>
+            <script
+                type="text/javascript"
+                src="js/modernizr.custom.js?ver=9.0"
+            ></script>
+        <![endif]-->
+  <!-- !Styles -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/4.0.3/web3.min.js"></script>
+  <script src="index.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <!-- <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.1/dist/umd/index.min.js"></script>           -->
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.7.1/dist/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+
+<body>
+  <!-- Preloader -->
+  <div class="metaportal_fn_preloader">
+    <div class="loading-container">
+      <div class="loading">
+        <div class="l1">
+          <div></div>
+        </div>
+        <div class="l2">
+          <div></div>
+        </div>
+        <div class="l3">
+          <div></div>
+        </div>
+        <div class="l4">
+          <div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- !Preloader -->
+
+
+
+  <!-- Searchbox Popup -->
+  <div class="metaportal_fn_search_closer"></div>
+  <div class="metaportal_fn_searchbox">
+    <div class="container small">
+      <div class="searchbox">
+        <input type="text" placeholder="Search here..." />
+        <a href="#">
+          <img src="svg/loupe.svg" alt="" class="fn__svg" />
+        </a>
+      </div>
+    </div>
+  </div>
+  <!-- !Searchbox Popup -->
+
+  <!-- Wallet Popup -->
+  <div class="metaportal_fn_wallet_closer ready"></div>
+  <div class="metaportal_fn_walletbox ready">
+    <a href="#" class="fn__closer"><span></span></a>
+    <div class="walletbox">
+      <div class="title_holder">
+        <h3>Connect Wallet</h3>
+      </div>
+
+      <div class="list_holder">
+        <ul class="metaportal_fn_items">
+          <li>
+            <div class="item" id="connect-metamask">
+              <a href="#"></a>
+              <span class="icon">
+                <img src="img/wallet/metamask.png" alt="" />
+
+              </span>
+              <span class="text">MetaMask</span>
+            </div>
+          </li>
+
+          <li>
+            <div class="item" id="connect-walletconnect">
+              <a href="#"></a>
+              <span class="icon">
+                <img src="img/wallet/walletconnect.png" alt="" />
+              </span>
+              <span class="text">WalletConnect</span>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import pkg from "https://esm.run/@walletconnect/ethereum-provider@2.9.0/dist/index.umd.js"
+
+    let ethereumProvider = undefined;
+    const connectButton = document.getElementById("connect-walletconnect");
+
+    // to get project ID go to https://cloud.walletconnect.com/
+    const projectId = '71e14e359276f60bf419682b86dad2a4';
+
+    async function onConnect() {
+      try {
+        connectButton.disabled = true;
+
+        if (!ethereumProvider) {
+          ethereumProvider = await pkg.EthereumProvider.init({
+            projectId,
+            showQrModal: true,
+            qrModalOptions: {
+              themeMode: "light"
+            },
+            chains: [56],
+            methods: ["eth_sendTransaction", "personal_sign"],
+            events: ["chainChanged", "accountsChanged"],
+            metadata: {
+              name: "AstroBirdz",
+              description: "AstroBirdz Dapp",
+              url: "https://nest.astrobirdz.io/",
+              icons: ["https://my-dapp.com/logo.png"],
+            },
+          });
+
+          ethereumProvider.on("connect", () => {
+            console.info(ethereumProvider.accounts);
+            const connectedElement = document.getElementById("connect-walletconnect");
+            connectedElement.innerHTML = `<span>Connected</span>`;
+            connectedElement.setAttribute("data-address", ethereumProvider.accounts[0]);
+          });
+        }
+
+        if (ethereumProvider) {
+          ethereumProvider.connect();
+          //Getting available NFTs for a specific user
+          const nfts = await getNFTs();
+              nfts.sort((a, b) => a.token_id - b.token_id);
+
+          console.log(nfts);
+          if (Array.isArray(nfts)) {
+            let html = '<option value="" disabled selected>Select NFT</option>';
+            for (const nft of nfts) {
+              const tokenId = nft.token_id;
+              html =
+                html +
+                `<option value="${tokenId}">Bird ${tokenId}</option>`;
+            }
+            const elements =
+              document.getElementsByClassName(
+                "dropdown-select"
+              );
+            console.log(elements);
+            for (const element of elements) {
+              element.innerHTML = html;
+            }
+          }
+
+          const claimButton = document.getElementById("claim_button");
+          claimButton.addEventListener("click", async () => {
+            const selectedTokenId = document.getElementById("birdSelectReward").value;
+            if (selectedTokenId) {
+              await claimReward(selectedTokenId);
+            } else {
+              alert("Please select a valid NFT to claim reward.");
+            }
+          });
+          function formatNumberWithDecimal(number) {
+  const formattedNumber = number.toString();
+  return formattedNumber.substring(0, 6);
+}
+          //adding event listener for the dropdowns
+          const dropDownFunctions = {
+            Reward: async (tokenId) => {
+              const rewards = await getReward(tokenId);
+              const formattedRewards = formatNumberWithDecimal(rewards);
+              console.log("🚀",formattedRewards, rewards)
+              document.getElementById(
+                "claim_text"
+              ).innerText = `${formattedRewards} ABZ`;
+            },
+            Incubate: async (tokenId) => {
+              const egg = await getEggHatch(tokenId);
+              const {
+                hasAlreadyHatched,
+                hatchTime,
+                isHatching,
+              } = egg;
+              console.log(hatchTime);
+              if (hatchTime === 0n) {
+                triggerIncubate();
+              } else {
+                startCountDown(
+                  hatchTime,
+                  hasAlreadyHatched
+                );
+              }
+            },
+            Feed: async (tokenId) => {
+              await setLevel(tokenId);
+            },
+          };
+          const onChangeDropDown = async (tokenId, type) => {
+            await setAttributesOfNft(tokenId, type);
+            await dropDownFunctions[type](tokenId);
+            // Fetch and display rarity
+            const rarity = await getRarity(tokenId);
+            const rarityElement = document.getElementById("rarity-value");
+            if (rarityElement) {
+              rarityElement.textContent = rarity;
+            }
+          };
+          const rewardDropDown =
+            document.getElementById("birdSelectReward");
+          const incubateDropDown =
+            document.getElementById("birdSelectIncubate");
+          const feedDropDown =
+            document.getElementById("birdSelectFeed");
+          const transferButtonReward = document.getElementById(
+            "transfer_button_Reward"
+          );
+          const transferButtonIncubate = document.getElementById(
+            "transfer_button_Incubate"
+          );
+          const transferButtonFeed = document.getElementById(
+            "transfer_button_Feed"
+          );
+          rewardDropDown.addEventListener("change", () => {
+            onChangeDropDown(rewardDropDown.value, "Reward");
+          });
+          incubateDropDown.addEventListener("change", () => {
+            const incubateButton =
+              document.getElementById("incubate_button");
+            const new_button = incubateButton.cloneNode(true);
+            incubateButton.parentNode.replaceChild(
+              new_button,
+              incubateButton
+            );
+            onChangeDropDown(
+              incubateDropDown.value,
+              "Incubate"
+            );
+          });
+          feedDropDown.addEventListener("change", () => {
+            const feedButton =
+              document.getElementById("feed_button");
+            const new_button = feedButton.cloneNode(true);
+            feedButton.parentNode.replaceChild(
+              new_button,
+              feedButton
+            );
+            onChangeDropDown(feedDropDown.value, "Feed");
+          });
+          console.log(transferButtonReward);
+          //adding event listener for the Transfer Buttons
+          transferButtonReward.addEventListener(
+            "click",
+            async () => {
+              await transfer("Reward");
+            }
+          );
+          transferButtonIncubate.addEventListener(
+            "click",
+            async () => {
+              await transfer("Incubate");
+            }
+          );
+          transferButtonFeed.addEventListener(
+            "click",
+            async () => {
+              await transfer("Feed");
+            }
+          );
+          const transfer = async (type) => {
+            try {
+              const address = document.getElementById(
+                `transfer_${type}`
+              ).value;
+              const tokenId = document.getElementById(
+                `birdSelect${type}`
+              ).value;
+              console.log(address, tokenId);
+              const txn = await transferOwnership(address, tokenId);
+              if (!txn) {
+                return alert(
+                  "OOPS Something wrong with the transaction"
+                );
+              }
+              location.reload();
+            } catch (err) {
+              console.log(err);
+              alert("OOPS! " + err.message);
+            }
+          };
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        connectButton.disabled = false;
+      }
+    }
+
+    connectButton.addEventListener("click", onConnect);
+  </script>
+
+  <script>
+    const startCountDown = (hatchTime, hasAlreadyHatched) => {
+      document.getElementById("incubate_button").disabled = true;
+      document
+        .getElementById("incubate_button")
+        .removeEventListener("click", onClickIncubate);
+      document
+        .getElementById("incubate_button")
+        .removeEventListener("click", onClickHatchEgg);
+      const hatchDate = new Date(Number(hatchTime) * 1000);
+      const interval = setInterval(() => {
+        var now = new Date().getTime();
+
+        // Find the distance between now and the count down date
+        var distance = hatchDate - now;
+
+        // Time calculations for days, hours, minutes and seconds
+        var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        var hours = Math.floor(
+          (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+        var minutes = Math.floor(
+          (distance % (1000 * 60 * 60)) / (1000 * 60)
+        );
+        var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        if (distance < 0 || hasAlreadyHatched) {
+          clearInterval(interval);
+          triggerHatchEgg(hasAlreadyHatched);
+        
+        } else {
+          document.getElementById("incubate_text").innerHTML =
+            days +
+            "d " +
+            hours +
+            "h " +
+            minutes +
+            "m " +
+            seconds +
+            "s ";
+
+        }
+      });
+    };
+    const triggerHatchEgg = (hasAlreadyHatched) => {
+      if (!hasAlreadyHatched) {
+        document.getElementById("incubate_button").disabled = false;
+        document
+          .getElementById("incubate_button")
+          .addEventListener("click", onClickHatchEgg);
+        document.getElementById("incubate_text").innerText =
+          "Hatch Egg";
+      } else {
+        document.getElementById("incubate_button").disabled = true;
+        document
+          .getElementById("incubate_button")
+          .removeEventListener("click", onClickIncubate);
+        document
+          .getElementById("incubate_button")
+          .removeEventListener("click", onClickHatchEgg);
+        document.getElementById("incubate_text").innerText =
+          "Already Hatched";
+      }
+    };
+    const triggerIncubate = () => {
+      console.log("Triggering Incubate");
+      document.getElementById("incubate_button").disabled = false;
+      document
+        .getElementById("incubate_button")
+        .addEventListener("click", onClickIncubate);
+      document.getElementById("incubate_text").innerText = "Incubate";
+    };
+    const onClickIncubate = async () => {
+      const incubateDropDown =
+        document.getElementById("birdSelectIncubate");
+      console.log("Trying to incubate");
+      await lockInIncubator(incubateDropDown.value);
+      const egg = await getEggHatch(incubateDropDown.value);
+      const {
+        hasAlreadyHatched,
+        hatchTime,
+        isHatching
+      } = egg;
+      startCountDown(hatchTime, hasAlreadyHatched);
+      await setAttributesOfNft(incubateDropDown.value, "Incubate");
+    };
+    const onClickHatchEgg = async () => {
+      const incubateDropDown =
+        document.getElementById("birdSelectIncubate");
+      console.log(incubateDropDown.value);
+      console.log("Trying to hatch");
+      await hatchEggs(incubateDropDown.value);
+      const egg = await getEggHatch(incubateDropDown.value);
+      const {
+        hasAlreadyHatched,
+        hatchTime,
+        isHatching
+      } = egg;
+      startCountDown(hatchTime, hasAlreadyHatched);
+      
+      location.reload();
+      await setAttributesOfNft(incubateDropDown.value, "Incubate");
+    };
+    const setAttributesOfNft = async (tokenId, type) => {
+      const getEggHatch = async (tokenId) => {
+        const web3 = new Web3(window.ethereum);
+        const accounts = await web3.eth.getAccounts();
+        const selectedAddress = accounts[0];
+        const contract = new web3.eth.Contract(abi, contractAddress);
+        const egg = await contract.methods._eggHatch(tokenId).call();
+        return egg;
+      };
+
+      const metadata = await getTokenUri(tokenId);
+
+      if (metadata.image_data) {
+        const element = document.getElementById(`vid_${type}`);
+        if (element) {
+          element.innerHTML = `<video width="100%" height="auto" autoplay loop> 
+				<source src="${metadata.image_data}" type="video/mp4">
+			</video>`;
+          element.setAttribute("data-bg-img", "");
+          element.style.backgroundImage = "";
+        }
+      }
+
+      if (metadata.description) {
+        const element = document.getElementById(`title_${type}`);
+        if (element) {
+          element.innerText = metadata.description;
+          element.setAttribute("data-text", "");
+        }
+      }
+
+      const attributes = await getTokenAttributes(tokenId);
+      console.log(attributes);
+
+      const eggHatchResult = await getEggHatch(tokenId);
+      console.log("egghatch result:", eggHatchResult);
+      const hasAlreadyHatched = eggHatchResult.hasAlreadyHatched;
+
+      console.log("hasAlreadyHatched:", hasAlreadyHatched);
+
+      const messageElement = document.getElementById(`egg-message_${type}`);
+      const attributesElement = document.getElementById(`att_${type}`);
+      const rarityElement = document.getElementById("rarity-value");
+
+      if (!hasAlreadyHatched) {
+        if (messageElement) {
+          messageElement.innerHTML = '<p class="egg-message">The Selected NFT is an egg NFT. Hatch the egg to see the unique attributes and rarity.</p>';
+        }
+        if (attributesElement) {
+          attributesElement.innerHTML = "";
+        }
+        if (rarityElement) {
+          rarityElement.textContent = "";
+          rarityElement.classList.remove("non-egg-rarity");
+        }
+      } else {
+        if (messageElement) {
+          messageElement.innerHTML = "";
+        }
+        if (attributesElement) {
+          let html = '';
+
+          for (const property in attributes) {
+            if (property.length > 1 && property !== "__length__" && property !== "speice" && property !== "set" && property !== "rarity") {
+              html +=
+                `<div class="attribute-box">
+                        <p>${property.charAt(0).toUpperCase() + property.slice(1)}: ${attributes[property]}</p>
+                        </div>`;
+            }
+          }
+
+
+          attributesElement.innerHTML = html;
+        }
+        if (rarityElement) {
+          const rarity = await getRarity(tokenId);
+          rarityElement.textContent = `Rarity: ${rarity}`;
+          rarityElement.classList.add("non-egg-rarity");
+        }
+      }
+    };
+
+
+
+    const approveFeeding = async () => {
+      const feedDropDown = document.getElementById("birdSelectFeed");
+      const feedButton = document.getElementById("feed_button");
+      const feedText = document.getElementById("feed_text");
+      const level = await getLevel(feedDropDown.value);
+      console.log(level);
+      let innerText;
+      let cost;
+      if (level === 1n) {
+        innerText = "Upgrade to Adult Bird";
+        cost = await getMatureBirdCost(feedDropDown.value);
+      } else if (level === 2n) {
+        innerText = "Upgrade to Mature Bird";
+        cost = await getMaxMatureBirdCost(feedDropDown.value);
+      }
+      const allowance = await getAllowance();
+      const balance = await balanceOfAbz();
+      if (allowance < cost) {
+        const txn = await approveAbz(cost);
+        if (txn) {
+          feedText.innerText = innerText;
+          feedButton.removeEventListener("click", approveFeeding);
+          feedButton.addEventListener("click", upgrade);
+        }
+      } else {
+        feedText.innerText = innerText;
+        feedButton.removeEventListener("click", approveFeeding);
+        feedButton.addEventListener("click", upgrade);
+      }
+    };
+    const upgrade = async () => {
+      const feedDropDown = document.getElementById("birdSelectFeed");
+      const feedButton = document.getElementById("feed_button");
+      const feedText = document.getElementById("feed_text");
+      console.log(feedDropDown.value);
+      const level = await getLevel(feedDropDown.value);
+      console.log(level);
+      if (level === 1n) {
+        const txn = await upgradeToMatureBird(feedDropDown.value);
+        if (txn) {
+          feedButton.removeEventListener("click", upgrade);
+          await setAttributesOfNft(feedDropDown.value, "Feed");
+          await setLevel(feedDropDown.value);
+        }
+      } else if (level === 2n) {
+        const txn = await upgradeToMaxMatureBird(
+          feedDropDown.value
+        );
+        if (txn) {
+          feedButton.removeEventListener("click", upgrade);
+          await setAttributesOfNft(feedDropDown.value, "Feed");
+          await setLevel(feedDropDown.value);
+        }
+      }
+    };
+    const setLevel = async (tokenId) => {
+      const feedButton = document.getElementById("feed_button");
+      const feedText = document.getElementById("feed_text");
+      const level = await getLevel(tokenId);
+      console.log(level);
+      if (level === 0n) {
+        feedButton.disabled = true;
+        feedText.innerText = "Not Hatched Yet";
+      } else if (level === 1n) {
+        feedButton.disabled = false;
+        feedButton.addEventListener("click", approveFeeding);
+        feedText.innerText = "Approve Feeding";
+      } else if (level === 2n) {
+        feedButton.disabled = false;
+        feedButton.addEventListener("click", approveFeeding);
+        feedText.innerText = "Approve Feeding";
+      } else if (level === 3n) {
+        feedButton.remove();
+      }
+    };
+  </script>
+  <!-- !Wallet Popup -->
+  <script>
+    async function connectMetamask() {
+      try {
+        let provider = null;
+
+        if (window.ethereum) {
+          // Check if Metamask is available
+          provider = window.ethereum;
+        } else if (window.web3) {
+          // Check if Trust Wallet is available (Trust Wallet exposes a web3 object)
+          provider = window.web3.currentProvider;
+        }
+
+        if (provider) {
+          const web3 = new Web3(provider);
+          // Request connection
+          await provider.request({
+            method: "eth_requestAccounts"
+          });
+
+          const accounts = await web3.eth.getAccounts();
+          const selectedAddress = accounts[0];
+          // Handle successful connection
+          document.getElementById("connect-metamask").innerHTML = `<span>Connected</span>`;
+
+          document.getElementById("address").innerHTML = `<span>Connected</span>`;
+          //Getting available NFTs for a specific user
+          const nfts = await getNFTs();
+          
+          console.log('Displaying Nfts: ',nfts);
+              nfts.sort((a, b) => a.token_id - b.token_id);
+
+          if (Array.isArray(nfts)) {
+            let html = '<option value="" disabled selected>Select NFT</option>';
+            for (const nft of nfts) {
+              const tokenId = nft.token_id;
+              html =
+                html +
+                `<option value="${tokenId}">Bird ${tokenId}</option>`;
+            }
+            const elements =
+              document.getElementsByClassName(
+                "dropdown-select"
+              );
+            console.log(elements);
+            for (const element of elements) {
+              element.innerHTML = html;
+            }
+          }
+          const claimButton = document.getElementById("claim_button");
+          claimButton.addEventListener("click", async () => {
+            const selectedTokenId = document.getElementById("birdSelectReward").value;
+            if (selectedTokenId) {
+              await claimReward(selectedTokenId);
+            } else {
+              alert("Please select a valid NFT to claim reward.");
+            }
+          });
+          const firstNFT = nfts[0];
+          console.log('First nft: ', firstNFT);
+          const firstDropdown = document.getElementById("birdSelectReward");
+          if (firstDropdown) {
+        firstDropdown.dispatchEvent(new Event("change"));
+    }
+          function formatNumberWithDecimal(number) {
+  const formattedNumber = number.toString();
+  return formattedNumber.substring(0, 6);
+}
+          //adding event listener for the dropdowns
+          const dropDownFunctions = {
+            Reward: async (tokenId) => {
+              const rewards = await getReward(tokenId);
+              
+              document.getElementById(
+                "claim_text"
+              ).innerText = `${rewards} ABZ`;
+            },
+            Incubate: async (tokenId) => {
+              const egg = await getEggHatch(tokenId);
+              const {
+                hasAlreadyHatched,
+                hatchTime,
+                isHatching,
+              } = egg;
+              console.log(hatchTime);
+              if (hatchTime === 0n) {
+                triggerIncubate();
+              } else {
+                startCountDown(
+                  hatchTime,
+                  hasAlreadyHatched
+                );
+              }
+            },
+            Feed: async (tokenId) => {
+              await setLevel(tokenId);
+            },
+          };
+          const onChangeDropDown = async (tokenId, type) => {
+            await setAttributesOfNft(tokenId, type);
+            await dropDownFunctions[type](tokenId);
+            // Fetch and display rarity
+            const rarity = await getRarity(tokenId);
+            const rarityElement = document.getElementById("rarity-value");
+            if (rarityElement) {
+              rarityElement.textContent = rarity;
+              rarityElement.textContent = `Rarity: ${rarity}`;
+              rarityElement.classList.add("non-egg-rarity");
+            }
+          };
+          const rewardDropDown =
+            document.getElementById("birdSelectReward");
+          const incubateDropDown =
+            document.getElementById("birdSelectIncubate");
+          const feedDropDown =
+            document.getElementById("birdSelectFeed");
+          const transferButtonReward = document.getElementById(
+            "transfer_button_Reward"
+          );
+          const transferButtonIncubate = document.getElementById(
+            "transfer_button_Incubate"
+          );
+          const transferButtonFeed = document.getElementById(
+            "transfer_button_Feed"
+          );
+          rewardDropDown.addEventListener("change", () => {
+            onChangeDropDown(rewardDropDown.value, "Reward");
+          });
+          incubateDropDown.addEventListener("change", () => {
+            const incubateButton =
+              document.getElementById("incubate_button");
+            const new_button = incubateButton.cloneNode(true);
+            incubateButton.parentNode.replaceChild(
+              new_button,
+              incubateButton
+            );
+            onChangeDropDown(
+              incubateDropDown.value,
+              "Incubate"
+            );
+          });
+          feedDropDown.addEventListener("change", () => {
+            const feedButton =
+              document.getElementById("feed_button");
+            const new_button = feedButton.cloneNode(true);
+            feedButton.parentNode.replaceChild(
+              new_button,
+              feedButton
+            );
+            onChangeDropDown(feedDropDown.value, "Feed");
+          });
+          console.log(transferButtonReward);
+          //adding event listener for the Transfer Buttons
+          transferButtonReward.addEventListener(
+            "click",
+            async () => {
+              await transfer("Reward");
+            }
+          );
+          transferButtonIncubate.addEventListener(
+            "click",
+            async () => {
+              await transfer("Incubate");
+            }
+          );
+          transferButtonFeed.addEventListener(
+            "click",
+            async () => {
+              await transfer("Feed");
+            }
+          );
+        } else {
+          // Metamask is not installed or Web3 is not available, inform the user to install Metamask
+          alert("No compatible wallet found. Please install Metamask or Trust Wallet.");
+        }
+      } catch (error) {
+        // Handle error or user denial
+        console.error("Error connecting to wallet:", error);
+      }
+    }
+
+    // Add event listener to the "Connect To Wallet" button
+    const connectMetamaskButton =
+      document.getElementById("connect-metamask");
+    connectMetamaskButton.addEventListener("click", connectMetamask);
+
+    const transfer = async (type) => {
+      try {
+        const address = document.getElementById(
+          `transfer_${type}`
+        ).value;
+        const tokenId = document.getElementById(
+          `birdSelect${type}`
+        ).value;
+        console.log(address, tokenId);
+        const txn = await transferOwnership(address, tokenId);
+        if (!txn) {
+          return alert(
+            "OOPS Something wrong with the transaction"
+          );
+        }
+        location.reload();
+      } catch (err) {
+        console.log(err);
+        alert("OOPS! " + err.message);
+      }
+    };
+  </script>
+
+  <!-- Main -->
+  <div class="metaportal_fn_main">
+    <!-- Mobile Navigation -->
+    <div class="metaportal_fn_mobnav">
+      <div class="mob_top">
+        <div class="social_trigger">
+
+        </div>
+        <div class="wallet">
+          <a href="#" class="metaportal_fn_button wallet_opener"><span>Wallet</span></a>
+        </div>
+      </div>
+      <div class="mob_mid">
+        <div class="logo">
+          <a href="index.html"><img src="img/N.E.S.T_dark.png" alt="" /></a>
+        </div>
+        <div class="trigger">
+          <span></span>
+        </div>
+      </div>
+      <div class="mob_bot">
+        <ul>
+          <li><a class="creative_link" href="#home">Home</a></li>
+          <li>
+            <a class="creative_link" href="#about">Your AstroBirdz</a>
+          </li>
+          <li>
+            <a class="creative_link" href="#hatchingsection">Hatching Station</a>
+          </li>
+          <li>
+            <a class="creative_link" href="#feedingsectionn">Feeding Station</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- !Mobile Navigation -->
+
+    <!-- Header -->
+    <header id="header">
+      <div class="header">
+        <div class="header_in">
+          <div class="trigger_logo">
+
+            <div class="logo">
+              <a href="index.html"><img src="img/N.E.S.T_dark.png" alt="" /></a>
+            </div>
+          </div>
+
+          <div class="nav">
+            <ul>
+              <li>
+                <a class="creative_link" href="#home">Home</a>
+              </li>
+              <li>
+                <a class="creative_link" href="#about">Your AstroBirdz</a>
+              </li>
+              <li>
+                <a class="creative_link" href="#hatchingsection">Hatching Station</a>
+              </li>
+              <li>
+                <a class="creative_link" href="#feedingsection">Feeding Station</a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="wallet">
+            <a href="#" class="metaportal_fn_button wallet_opener" id="address">
+              <span id="address">Connect To Wallet</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- !Header -->
+
+    <!-- Content -->
+    <div class="metaportal_fn_content">
+      <!-- Home Section -->
+      <section id="home">
+        <div class="container">
+          <h3 id="nft_title" class="fn__maintitle big" data-align="center">
+            AstroBirdz
+          </h3>
+
+          <!-- Slider -->
+          <div class="fn_cs_slider" data-responsive="on">
+            <div class="slider_top hig-30">
+              <ul>
+                <li class="prev" data-index="1">
+                  <div class="item">
+                    <video src="https://astrobirdz.mypinata.cloud/ipfs/QmcG1oFvR7udv36qSBtFgHGSNbdvFg2MFRFaCDJKfkk77H/nftvideo1.mp4" video="web/mp4" autoplay muted preload="auto"></video>
+                  </div>
+                </li>
+                <li class="active" data-index="2">
+                  <div class="item">
+                    <video src="https://astrobirdz.mypinata.cloud/ipfs/QmSFoUveb1zxXLmDNbr3o15yUwTgLyY7CpqgkKuS1ffNk9?filename=nft%2520video%25202.mp4" video="web/mp4" autoplay muted preload="auto"></video>
+                  </div>
+                </li>
+                <li class="next" data-index="3">
+                  <div class="item">
+                    <video src="https://astrobirdz.mypinata.cloud/ipfs/QmcG1oFvR7udv36qSBtFgHGSNbdvFg2MFRFaCDJKfkk77H/nft%20video%203.mp4" video="web/mp4" autoplay muted preload="auto"></video>
+                  </div>
+                </li>
+                <li class="next2" data-index="4">
+                  <div class="item">
+                    <video src="https://astrobirdz.mypinata.cloud/ipfs/QmSufrET5fDw939N5x6K2k55guDsstKj3ztAF4JwWrx6rv?filename=nft%2520video%25204.mp4" video="web/mp4" autoplay muted preload="auto"></video>
+                  </div>
+                </li>
+                <li data-index="5">
+                  <div class="item">
+                    <video src="https://astrobirdz.mypinata.cloud/ipfs/Qma7r73Bcrcn9mR2iChqadGV1szsV9maTHU7q7RDeEo9Yz?filename=nft%2520video%25205.mp4" video="web/mp4" autoplay muted preload="auto"></video>
+                  </div>
+                </li>
+                <li data-index="6">
+                  <div class="item">
+                    <video src="https://astrobirdz.mypinata.cloud/ipfs/QmdfNP5F5de8yhzJ7BkquoRkhLEMnfvMk4DNRhCYZymePb?filename=nft%2520video%25206.mp4" video="web/mp4" autoplay muted preload="auto"></video>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="slider_nav">
+              <a href="#" class="prev">
+                <span class="circle"></span>
+                <span class="icon"><img src="svg/down.svg" alt="" class="fn__svg" /></span>
+                <span class="circle"></span>
+              </a>
+              <a href="#" class="next">
+                <span class="circle"></span>
+                <span class="icon"><img src="svg/down.svg" alt="" class="fn__svg" /></span>
+                <span class="circle"></span>
+              </a>
+            </div>
+          </div>
+          <!-- !Slider -->
+
+          <!-- Description -->
+          <div class="fn_cs_desc">
+            <p>
+              Welcome to the enchanting world of AstroBirdz
+              NFTs, where unique creatures hatch from a single
+              cosmic egg, each possessing distinct rarities
+              and attributes. These celestial beings are born
+              from the very essence of the stars, making each
+              one a true masterpiece.
+            </p>
+            <a href="https:// .io/" class="metaportal_fn_button" target="_blank"><span>Buy Now</span></a>
+          </div>
+          <!-- !Description -->
+        </div>
+      </section>
+      <!-- !Home Section -->
+
+      <!-- Fun Facts -->
+      <section id="fun_facts">
+        <div class="container">
+          <div class="fn_cs_counter_list">
+            <ul>
+              <li>
+                <div class="item">
+                  <h3 class="fn__gradient_title">
+                    <span class="prefix"></span>
+                    <span class="fn_cs_counter" data-from="0" data-to="9999" data-speed="3000" data-decimals="0">0</span>
+                    <span class="suffix"></span>
+                  </h3>
+                  <p>Total NFTs</p>
+                  <div class="divider"></div>
+                </div>
+              </li>
+              <li>
+                <div class="item">
+                  <h3 class="fn__gradient_title">
+                    <span class="prefix"></span>
+                    <span class="fn_cs_counter" data-from="0" data-to="6" data-speed="3000">0</span>
+
+                  </h3>
+                  <p>Total Bird Species</p>
+                  <div class="divider"></div>
+                </div>
+              </li>
+              <li>
+                <div class="item">
+                  <h3 class="fn__gradient_title">
+                    <span class="prefix"></span>
+                    <span class="fn_cs_counter " data-from="0" data-to="250" data-speed="3000">0</span>
+                    <span class="suffix">%</span>
+                  </h3>
+                  <p>APY UPTO</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      <!-- !Fun Facts -->
+
+      <!-- About Section -->
+      <section id="about">
+
+        <!-- Your Astrobirdz Section -->
+        <h3 id="nft_title" class="fn__maintitle big" data-align="center">
+          Your Astrobirdz
+        </h3>
+        <div class="fn_cs_about">
+
+          <div class="left_part">
+            <div class="img">
+              <div id="vid_Reward" class="img_in" data-bg-img="img/nft.png">
+                <img src="img/nft.png" alt="" />
+              </div>
+            </div>
+
+          </div>
+          <div class="right_part">
+            <div class="right_in">
+              <div class="dropdown">
+                <select class="dropdown-select" id="birdSelectReward">
+                  <option value="" disabled selected>Select NFT</option>
+                  <option value="bird1">Bird 1</option>
+                  <option value="bird2">Bird 2</option>
+                  <option value="bird3">Bird 3</option>
+                </select>
+              </div>
+              <br>
+              <h3 class="fn__maintitle" data-text="">
+
+              </h3>
+              <div id="egg-message_Reward"></div>
+              <div id="rarity" style="display: flex">
+                <p id="rarity-value"></p>
+              </div>
+
+              <div class="nft_attributes" id="att_Reward">
+
+              </div>
+              <br>
+              <button id="claim_button" class="metaportal_fn_button" target="_blank"><span id="claim_text">Claim</span></button>
+              <div>
+                <input id="transfer_Reward" placeholder="To Transfer The NFT Paste Wallet Address" class="metaportal_fn_transfer_input" style="color: white; margin-top: 10px;" />
+                <button class="metaportal_fn_button" id="transfer_button_Reward" style="margin-top: 10px;">
+                  Transfer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="hatchingsection">
+
+        <h3 id="nft_title" class="fn__maintitle big" data-align="center">
+          Hatching Station
+        </h3>
+        <div class="fn_cs_about">
+          <div class="left_part">
+            <div class="img">
+              <div id="vid_Incubate" class="img_in" data-bg-img="img/nft.png">
+                <img src="img/nft.png" alt="" />
+              </div>
+            </div>
+          </div>
+          <div class="right_part">
+            <div class="right_in">
+              <div class="dropdown">
+                <select class="dropdown-select" id="birdSelectIncubate">
+                  <option value="bird1">Bird 1</option>
+                  <option value="bird2">Bird 2</option>
+                  <option value="bird3">Bird 3</option>
+                  <!-- Add more options here for different birds -->
+                </select>
+              </div>
+              <br>
+              <h3 class="fn__maintitle" data-text="Hatch Astrobirdz">
+
+                Hatch Astrobirdz
+              </h3>
+
+
+              <div class="nft_attributes" id="att_Incubate">
+
+              </div>
+
+
+              <div class="fn_cs_divider"></div>
+
+              <!-- Dropdown Menu -->
+
+              <!-- End of Dropdown Menu -->
+              <button type="submit" class="metaportal_fn_button" target="_blank" id="incubate_button">
+                <span id="incubate_text">Incubate</span>
+              </button>
+              <br />
+              <p style="color: #ffffff">
+                Note: Every Egg NFT takes 7 days to
+                incubate! After Incubation period ends, the
+                user will have to press "hatch" for the bird
+                to come out.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="feedingsection">
+        <!-- Feeding Section -->
+        <h3 id="nft_title" class="fn__maintitle big" data-align="center">
+          Feeding Station
+        </h3>
+        <div class="fn_cs_about">
+          <div class="left_part">
+            <div class="img">
+              <div id="vid_Feed" class="img_in" data-bg-img="img/nft.png">
+                <img src="img/nft.png" alt="" />
+              </div>
+            </div>
+          </div>
+          <div class="right_part">
+            <div class="right_in">
+              <div class="dropdown">
+                <select class="dropdown-select" id="birdSelectFeed">
+                  <option value="bird1">Bird 1</option>
+                  <option value="bird2">Bird 2</option>
+                  <option value="bird3">Bird 3</option>
+                </select>
+              </div>
+              <br>
+              <h3 class="fn__maintitle" data-text="Feed Astrobirdz" style="padding-bottom: 2px;">
+                Feed Astrobirdz
+              </h3>
+              <div class="nft_attributes" id="att_Feed">
+              </div>
+              <div class="fn_cs_divider"></div>
+              <button class="metaportal_fn_button" target="_blank" id="feed_button">
+                <span id="feed_text">Incubate</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Footer -->
+      <footer id="footer">
+        <div class="container">
+          <div class="footer">
+            <div class="left_part">
+              <p>
+                Copyright © AstroBirdz. All Rights Reserved by
+                <a href="https://astrobirdz.io/" target="_blank">AstroBirdz</a>
+              </p>
+            </div>
+          
+          </div>
+        </div>
+      </footer>
+      <!-- !Footer -->
+    </div>
+  </div>
+  <!-- Totop -->
+  <a href="#" class="metaportal_fn_totop">
+    <span class="totop_inner">
+      <span class="icon">
+        <img src="svg/down.svg" alt="" class="fn__svg" />
+      </span>
+      <span class="text">Scroll To Top</span>
+    </span>
+  </a>
+  <!-- /Totop -->
+  </div>
+  <!-- !Main -->
+
+  <!-- Scripts -->
+  <script type="text/javascript" src="js/jquery.js?ver=9.0"></script>
+  <script type="text/javascript" src="js/plugins.js?ver=9.0"></script>
+  <!--[if lt IE 10]>
+            <script type="text/javascript" src="js/ie8.js?ver=9.0"></script>
+        <![endif]-->
+  <script type="text/javascript" src="js/init.js?ver=9.0"></script>
+  <!-- !Scripts -->
+</body>
+
+</html>
