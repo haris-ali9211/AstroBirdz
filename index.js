@@ -205,7 +205,7 @@ const getNFTs = async () => {
 const getNFTsFromWallet = async (walletAddress) => {
     // Get the list of NFTs owned by the wallet
     const NFTs = await axios.get(
-        `https://deep-index.moralis.io/api/v2/0x8B2837fcaFAdD80d24C159dD910C201F06eC45Ce/nft?chain=bsc&format=decimal&token_addresses%5B0%5D=0xf223609c70bA25e7bb286f008a50f934ee7B8A4A`,
+        `https://deep-index.moralis.io/api/v2/${walletAddress}/nft?chain=bsc&format=decimal&token_addresses%5B0%5D=0xf223609c70bA25e7bb286f008a50f934ee7B8A4A`,
         { headers: { 'X-API-Key': "0D1yPrfVMgJsqXaqHHfz31Zh4JZq0y2bbv6m5ALiapsiSIO4PAZlQczYOvZjJ4HX", 'accept': 'application/json' } }
     );
 
