@@ -473,7 +473,9 @@
       const attributesElement = document.getElementById(`att_${type}`);
       const rarityElement = document.getElementById("rarity-value");
 
-      if (!hasAlreadyHatched) {
+      if (!hasAlreadyHatched && attributes[0] == "") {
+        console.log("uper",attributes[0])
+        if (!hasAlreadyHatched) {
         if (messageElement) {
           messageElement.innerHTML = '<p class="egg-message">The Selected NFT is an egg NFT. Hatch the egg to see the unique attributes and rarity.</p>';
         }
@@ -509,6 +511,36 @@
           rarityElement.classList.add("non-egg-rarity");
         }
       }
+      }
+      else{
+        console.log("down",attributes[0])
+         if (messageElement) {
+          messageElement.innerHTML = "";
+        }
+        if (attributesElement) {
+          let html = '';
+
+          for (const property in attributes) {
+            if (property.length > 1 && property !== "__length__" && property !== "speice" && property !== "set" && property !== "rarity") {
+              html +=
+                `<div class="attribute-box">
+                        <p>${property.charAt(0).toUpperCase() + property.slice(1)}: ${attributes[property]}</p>
+                        </div>`;
+            }
+          }
+
+
+          attributesElement.innerHTML = html;
+        }
+        if (rarityElement) {
+          const rarity = await getRarity(tokenId);
+          rarityElement.textContent = `Rarity: ${rarity}`;
+          rarityElement.classList.add("non-egg-rarity");
+        }
+
+      }
+
+
     };
 
 
